@@ -7,6 +7,9 @@ on:
   push:
     tags:
       - '**'
+  # Manual trigger -- lets the signing-key diagnostic (and re-publish attempts generally) run
+  # against develop without needing to move the (immutable, already-pushed) release tag.
+  workflow_dispatch: {}
 
 permissions: {}
 
@@ -29,6 +32,37 @@ jobs:
           distribution: 'zulu'
           java-version: 25
 
+      # Diagnostic only -- never prints the key itself, only its byte length and whether it
+      # has the expected PGP private-key armor header/footer. Two prior release attempts both
+      # failed with "secret key ring doesn't start with secret key tag: tag 0xffffffff" (Bouncy
+      # Castle's signature for empty/truncated input), so this checks the actual secret content
+      # reaching this job rather than guessing further. Runs first (before the tag-only checks
+      # below) so it also works on a workflow_dispatch test run against develop. Remove once the
+      # GPG_PRIVATE_KEY org secret is confirmed good.
+      - name: Debug signing key shape (no key content printed)
+        run: |
+          LEN=$(printf '%s' "$ORG_GRADLE_PROJECT_signingInMemoryKey" | wc -c)
+          echo "GPG_PRIVATE_KEY length: $LEN bytes"
+          if [ "$LEN" -eq 0 ]; then
+            echo "::error::GPG_PRIVATE_KEY is empty -- the org secret is not reaching this job."
+            exit 1
+          fi
+          FIRST_LINE=$(printf '%s' "$ORG_GRADLE_PROJECT_signingInMemoryKey" | head -1)
+          LAST_LINE=$(printf '%s' "$ORG_GRADLE_PROJECT_signingInMemoryKey" | tail -1)
+          echo "First line: $FIRST_LINE"
+          echo "Last line: $LAST_LINE"
+          if [ "$FIRST_LINE" != "-----BEGIN PGP PRIVATE KEY BLOCK-----" ]; then
+            echo "::error::First line is not the expected PGP PRIVATE KEY armor header -- this is not a private key export (public key exports start with '-----BEGIN PGP PUBLIC KEY BLOCK-----')."
+            exit 1
+          fi
+          if [ "$LAST_LINE" != "-----END PGP PRIVATE KEY BLOCK-----" ]; then
+            echo "::error::Last line is not the expected PGP PRIVATE KEY armor footer -- key may be truncated."
+            exit 1
+          fi
+          echo "GPG_PRIVATE_KEY shape looks correct."
+        env:
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_PRIVATE_KEY }}
+
       - name: Validate signing configuration
         run: |
           if ! grep -Eq '^[[:space:]]*signAllPublications[[:space:]]*=[[:space:]]*true[[:space:]]*$' gradle.properties; then
@@ -38,7 +72,10 @@ jobs:
             exit 1
           fi
 
+      # Only meaningful on a real tag push -- workflow_dispatch runs (used for the signing-key
+      # diagnostic above without moving the release tag) have no tag to check against.
       - name: Verify tag matches VERSION_NAME
+        if: github.event_name == 'push'
         run: |
           TAG="${GITHUB_REF_NAME#v}"
           VERSION="$(grep -E '^VERSION_NAME=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')"
