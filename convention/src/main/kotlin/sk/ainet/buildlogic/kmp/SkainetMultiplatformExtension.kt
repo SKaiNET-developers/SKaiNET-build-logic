@@ -27,6 +27,19 @@ abstract class SkainetMultiplatformExtension {
      */
     var androidJvmTarget: JvmTarget = JvmTarget.JVM_11
 
+    /**
+     * `jvmTarget` for the plain `jvm()` target's compilation (not Android — see
+     * [androidJvmTarget] for that).
+     *
+     * Explicit and centralized rather than left unset: without this, the compiled bytecode
+     * level silently follows whatever JDK happens to run the build (the host machine locally,
+     * whatever a CI workflow's `setup-java` step pins) instead of being a deliberate,
+     * version-controlled decision — the exact kind of implicit, per-repo-drifting default this
+     * plugin exists to eliminate. [JvmTarget.JVM_17] is a widely-compatible modern LTS baseline;
+     * override per module if a specific one needs something else.
+     */
+    var jvmTarget: JvmTarget = JvmTarget.JVM_17
+
     /** Calls `explicitApi()`. */
     var explicitApi: Boolean = true
 

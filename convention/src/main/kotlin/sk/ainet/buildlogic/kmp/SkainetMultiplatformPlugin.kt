@@ -10,6 +10,7 @@ import org.gradle.api.plugins.ExtensionAware
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsSubTargetDsl
+import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import sk.ainet.buildlogic.npm.NpmPinsMarker
 
 private const val ANDROID_KMP_PLUGIN_ID = "com.android.kotlin.multiplatform.library"
@@ -84,7 +85,19 @@ class SkainetMultiplatformPlugin : Plugin<Project> {
             }
         }
 
+        configureJvm(kotlin, extension)
         configureAndroid(project, kotlin, extension)
+    }
+
+    /**
+     * Pins the plain `jvm()` target's compiled bytecode level to [SkainetMultiplatformExtension
+     * .jvmTarget] instead of leaving it to silently follow whatever JDK happens to run the
+     * build. `withType` is a no-op when the module didn't request the `jvm` target at all.
+     */
+    private fun configureJvm(kotlin: KotlinMultiplatformExtension, extension: SkainetMultiplatformExtension) {
+        kotlin.targets.withType(KotlinJvmTarget::class.java).configureEach {
+            compilerOptions { jvmTarget.set(extension.jvmTarget) }
+        }
     }
 
     /**
