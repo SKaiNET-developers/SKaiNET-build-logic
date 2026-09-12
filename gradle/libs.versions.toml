@@ -1,0 +1,16 @@
+[versions]
+kotlin = "2.4.10"
+agp = "9.2.1"
+dokka = "2.2.0"
+vanniktech-mavenPublish = "0.37.0"
+
+[libraries]
+# compileOnly, never implementation -- see convention/build.gradle.kts's own comment for why:
+# these give the convention plugins compile-time types only; the real runtime jar the consuming
+# build actually loads is resolved via that build's own plugin application, not this one's.
+kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+vanniktech-mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-mavenPublish" }
