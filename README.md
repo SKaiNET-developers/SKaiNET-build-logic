@@ -16,7 +16,7 @@ own `buildSrc` instead, because `includeBuild`-only consumption was impractical.
 
 | Plugin ID | What it does |
 |---|---|
-| `sk.ainet.multiplatform` | Standard KMP module setup: `skainet { targets = "jvm,apple,linux,..." }` expands friendly group names to real Kotlin targets (`apple`→`iosArm64,iosSimulatorArm64,macosArm64`, `linux`→`linuxX64,linuxArm64`, `androidNative`→`androidNativeArm32,androidNativeArm64`), plus `android {}` block wiring, `explicitApi()`, `kotlin-test` in `commonTest`, and Karma test hardening for JS/Wasm. |
+| `sk.ainet.multiplatform` | Standard KMP module setup: `skainet { targets = "jvm,apple,linux,..." }` expands friendly group names to real Kotlin targets (`apple`→`iosArm64,iosSimulatorArm64,macosArm64`, `linux`→`linuxX64,linuxArm64`, `androidNative`→`androidNativeArm32,androidNativeArm64`), plus `android {}` block wiring, a centralized `jvmTarget` for the plain `jvm()` target (default `JVM_17`, since 1.1.0 — previously left unset, so the compiled bytecode level silently followed whatever JDK ran the build), `explicitApi()`, `kotlin-test` in `commonTest`, and Karma test hardening for JS/Wasm. |
 | `sk.ainet.maven-pins` | Root-only. `skainet { mavenPins { pin("group:artifact", version) } }` forces a Maven/JVM coordinate to an audited version across every subproject's dependency graph — the mechanism for silencing a transitive-dependency CVE that has no direct upgrade path. `verifyMavenPins` (wired into `check`) fails if a pin stops resolving to its declared version. |
 | `sk.ainet.npm-pins` | Same idea for npm/Yarn transitive dependencies, across both the Kotlin/JS and Kotlin/Wasm `yarn.lock` graphs at once (one declaration, both lockfiles). Required at the root project whenever any module builds `js`/`wasmJs` targets — `sk.ainet.multiplatform` enforces this at configuration time. |
 | `sk.ainet.transformers.bom-coverage` | Auto-discovers every subproject applying `com.vanniktech.maven.publish` and adds it as an `api` platform constraint on a `java-platform` BOM module — no manual module list to maintain as new publishable modules are added. Fails fast if a published module is missing `POM_ARTIFACT_ID`/`POM_NAME` (would otherwise fail silently or wrongly at Maven Central deploy time). |
@@ -27,13 +27,14 @@ own `buildSrc` instead, because `includeBuild`-only consumption was impractical.
 ```kotlin
 // module build.gradle.kts
 plugins {
-    id("sk.ainet.multiplatform") version "1.0.0"
+    id("sk.ainet.multiplatform") version "1.1.0"
     alias(libs.plugins.androidMultiplatformLibrary)   // opt into Android, applied by the consumer
 }
 
 skainet {
     namespace = "sk.ainet.yourlib.core"
     targets = "jvm,apple,linux,js,wasmJs"
+    // jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21   // override the JVM_17 default
 }
 ```
 

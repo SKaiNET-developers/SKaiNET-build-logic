@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-09-12
+
+### Added
+
+- `sk.ainet.multiplatform` gains `skainet { jvmTarget = ... }`, centralizing the plain `jvm()`
+  target's compiled bytecode level (default `JvmTarget.JVM_17`). Previously unset entirely, so
+  the bytecode level silently followed whatever JDK happened to run the build (a consumer's
+  local machine, or whatever a CI workflow's `setup-java` step pinned) instead of being a
+  deliberate, version-controlled decision — the exact kind of implicit per-repo drift this
+  plugin exists to eliminate. Verified end-to-end against `SKaiNET-audio`: compiled class files
+  now carry major version 61 (Java 17) regardless of the JDK 25 host running the build.
+
 ## [1.0.0] — 2026-09-12
 
 First release. Five Gradle convention plugins extracted wholesale from the SKaiNET engine
