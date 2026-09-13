@@ -1,5 +1,5 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Maven Central](https://img.shields.io/maven-central/v/sk.ainet.buildlogic/sk.ainet.multiplatform.gradle.plugin.svg)](https://central.sonatype.com/artifact/sk.ainet.buildlogic/sk.ainet.multiplatform.gradle.plugin)
+[![Maven Central](https://img.shields.io/maven-central/v/sk.ainet.buildlogic/convention.svg)](https://central.sonatype.com/artifact/sk.ainet.buildlogic/convention)
 
 # SKaiNET-build-logic
 
